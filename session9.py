@@ -1,12 +1,12 @@
-# Decorators
+from functools import wraps
+from datetime import datetime
+import time
+from time import perf_counter
+from decimal import Decimal
+from functools import singledispatch
+from html import escape
+from numbers import Integral
 
-A **decorator** in **Python** is any callable **Python** object that is used to modify a function or a class. This assignment is about implementing various simple decorators to accomplish tiny features in our functions.
-
-## Allows a function to run only on odd seconds
-
-A simple decorator to make the function return the output only if the current time has seconds numeric as an odd digit.
-
-```python
 def odd_it(fn: "Function"):
     """
     Decorator that lets a function run only when the 'second' numeric
@@ -19,13 +19,7 @@ def odd_it(fn: "Function"):
         if CURR_TIME.second % 2 != 0:
             return fn(*args, **kwargs)
     return inner
-```
 
-## Logs
-
-A decorator to print the logs of a function, the start time of execution, end time, running time. Also, whether the function returns something, it's docs. The decorator adds these functionality for us.
-
-```python
 def log_it(fn: "Function"):
     """
     Decorator to add the log printing functionality to
@@ -42,13 +36,7 @@ def log_it(fn: "Function"):
         print(f"Function returned something: {True if result else False}")
         return result
     return inner
-```
 
-## Authenticate
-
-Decorator to implement simple authentication functionality and give that to any function of our choice. The user can make use of a closure to provide the current password. It has to match with the default user password provided beforehand.
-
-```python
 def set_password() -> "Function":
     """
     A simple closure to set and store a permanent pssword.
@@ -83,13 +71,8 @@ def authenticate(curr_password: str, user_password: str):
         return inner
 
     return decor
-```
 
-## Average time
 
-A decorator factory, that takes in an integer, defining the number of iteration of which a function's runtime has to be calculated and average is calculated. It returns a decorator.
-
-```python
 def time_it(reps: int):
     """
     Decorator factory to take in an integer defining the number of
@@ -113,13 +96,7 @@ def time_it(reps: int):
             return result
         return inner
     return timed
-```
 
-## Privilege
-
-Decorator that provides privilege access. A function can have four parameters and based on the privileges (high, mid, low, no), access is given to all 4, 3, 2 or 1 parameters.
-
-```python
 class Privilege:
     """
     This decorator class  wraps any function with certain privileges which
@@ -154,13 +131,8 @@ class Privilege:
             elif self.privilege == "no":
                 return fn(base)
         return inner
-```
 
-## Single dispatch
 
-Writing HTMLize code using `singledispatch`, available as a built-in decorator in `functools` module. Also the idea is to add functionality using monkey patching and not make every thing hard coded.
-
-```python
 @singledispatch
 def htmlize(str_esc: str) -> str:
     """
@@ -169,10 +141,47 @@ def htmlize(str_esc: str) -> str:
     return: string, transformed
     """
     return escape(str(str_esc)).replace("\n", "<br/>\n")
-```
 
-After this, functions to handle other types are added one by one, available in the code.
 
-## Test Case Performance
+@htmlize.register(Integral)
+def html_integral_numbers(int_esc: int) -> str:
+    """
+    Convert the integral numbers to proper format.
+    input: Integer to convert
+    return: htmlized integer
+    """
+    return f"{int_esc}(<i>{str(hex(int_esc))}</i>)"
 
-![](result.png)
+
+@htmlize.register(Decimal)
+@htmlize.register(float)
+def html_real(float_esc: float) -> str:
+    """
+    Converts the real number to rounded real number with precision of 2.
+    int: float number to convert
+    return: htmlized float
+    """
+    return f"(<i>{round(float_esc, 2)}</i>)"
+
+
+@htmlize.register(tuple)
+@htmlize.register(list)
+def html_sequence(seq_esc: "Sequence") -> str:
+    """
+    Converts the python sequence (tuples and lists) to an un ordered list
+    input: sequence
+    output: unordered list
+    """
+    items = (f"<li>{htmlize(item)}</li>" for item in seq_esc)
+    return "<ul>\n" + "\n".join(items) + "\n</ul>"
+
+
+@htmlize.register(dict)
+def html_dict(dict_esc: dict) -> str:
+    """
+    Converts python dictionary to an un ordered list
+    input: dictionary object to convert
+    output: unordered list
+    """
+    items = (f"<li>{k}={v}</li>" for k, v in dict_esc.items())
+    return "<ul>\n" + "\n".join(items) + "\n</ul>"
